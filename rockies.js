@@ -44,7 +44,11 @@ const getGameInfo = async () => {
   const date = DateTime.local();
 
   const month = date.c.month < 10 ? `0${date.c.month}` : date.c.month;
-  const day = date.c.day < 10 ? `0${date.c.day}` : date.c.day;
+  let day = date.c.day < 10 ? `0${date.c.day}` : date.c.day;
+
+  if (date.c.hour < 6) {
+    day = date.c.day < 10 ? `0${date.c.day - 1}` : date.c.day - 1;
+  }
 
   const formattedDate = `${date.c.year}${month}${day}`;
 
