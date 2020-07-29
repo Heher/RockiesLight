@@ -1,5 +1,6 @@
 const fetch = require('node-fetch');
 const v3 = require('node-hue-api').v3;
+const { DateTime } = require('luxon');
 const { findBridgeAndApi } = require('./api');
 
 const LightState = v3.lightStates.LightState;
@@ -40,12 +41,12 @@ const getGameInfo = async () => {
   const buff = new Buffer.from(`${process.env.MSF_API_KEY}:MYSPORTSFEEDS`, 'utf-8');
   const base64Data = buff.toString('base64');
 
-  const today = new Date();
-  let date = ("0" + today.getDate()).slice(-2);
-  let month = ("0" + (today.getMonth() + 1)).slice(-2);
-  let year = today.getFullYear();
-  
-  const formattedDate = year + month + date;
+  const date = DateTime.local();
+
+  const month = date.c.month < 10 ? `0${date.c.month}` : date.c.month;
+  const day = date.c.day < 10 ? `0${date.c.day}` : date.c.day;
+
+  const formattedDate = `${date.c.year}${month}${day}`;
 
   const url = `https://api.mysportsfeeds.com/v2.1/pull/mlb/current/date/${formattedDate}/games.json?`;
 
@@ -69,8 +70,8 @@ const getGameInfo = async () => {
     }
   })
 
-  console.log(json.games);
-  console.log(liveGame);
+  // console.log(json.games);
+  // console.log(liveGame);
 
   if (liveGame) {
     setRockiesLight();
