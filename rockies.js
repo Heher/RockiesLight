@@ -7,13 +7,27 @@ const LightState = v3.lightStates.LightState;
 
 let api;
 
-const setRockiesLight = async () => {
+const getLightsStatus = async () => {
   if (!api) {
     api = await findBridgeAndApi();
   }
 
-  const light = await api.lights.getLightByName("TV");
-  const lightID = light._data.id;
+  const rockiesLight = await api.lights.getLightByName("TV");
+  const regularLight = await api.lights.getLightByName("Whiteboard");
+
+  return { rockiesLight, regularLight };
+}
+
+const lightsAreOff = async () => {
+  const {regularLight} = await getLightsStatus();
+
+  return !regularLight._data.state.on;
+}
+
+const setRockiesLight = async () => {
+  const { rockiesLight } = await getLightsStatus();
+
+  const lightID = rockiesLight._data.id;
 
   const newState = new LightState().on().xy(0.199, 0.087);
 
@@ -21,12 +35,7 @@ const setRockiesLight = async () => {
 }
 
 const resetRockiesLight = async () => {
-  if (!api) {
-    api = await findBridgeAndApi();
-  }
-
-  const rockiesLight = await api.lights.getLightByName("TV");
-  const regularLight = await api.lights.getLightByName("Whiteboard");
+  const { rockiesLight, regularLight } = await getLightsStatus();
 
   const {bri, xy, on} = regularLight._data.state;
 
@@ -38,17 +47,25 @@ const resetRockiesLight = async () => {
 }
 
 const getGameInfo = async () => {
+  const lightsOff = await lightsAreOff();
+
+  if (lightsOff) {
+    return;
+  }
+
   const buff = new Buffer.from(`${process.env.MSF_API_KEY}:MYSPORTSFEEDS`, 'utf-8');
   const base64Data = buff.toString('base64');
 
   const date = DateTime.local();
 
-  const month = date.c.month < 10 ? `0${date.c.month}` : date.c.month;
-  let day = date.c.day < 10 ? `0${date.c.day}` : date.c.day;
+  let correctDate = date;
 
   if (date.c.hour < 6) {
-    day = date.c.day < 10 ? `0${date.c.day - 1}` : date.c.day - 1;
+    correctDate = date.minus({ days: 1 });
   }
+
+  const month = correctDate.c.month < 10 ? `0${correctDate.c.month}` : correctDate.c.month;
+  let day = correctDate.c.day < 10 ? `0${correctDate.c.day}` : correctDate.c.day;
 
   const formattedDate = `${date.c.year}${month}${day}`;
 
@@ -73,9 +90,6 @@ const getGameInfo = async () => {
       liveGame = true;
     }
   })
-
-  // console.log(json.games);
-  // console.log(liveGame);
 
   if (liveGame) {
     setRockiesLight();
