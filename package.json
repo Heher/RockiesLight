@@ -11,7 +11,7 @@
   "dependencies": {
     "dotenv": "^8.2.0",
     "luxon": "^1.24.1",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "node-hue-api": "^4.0.7"
   }
 }
